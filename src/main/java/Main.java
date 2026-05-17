@@ -3,7 +3,7 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
-import tools.ReadFileTool
+import tools.ReadFileTool;
 
 public class Main {
     public static void main(String[] args) {
