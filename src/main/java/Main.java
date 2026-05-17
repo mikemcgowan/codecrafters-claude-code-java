@@ -3,6 +3,8 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
+import tools.ReadFileTool
+
 public class Main {
     public static void main(String[] args) {
         if (args.length < 2 || !"-p".equals(args[0])) {
@@ -31,6 +33,7 @@ public class Main {
                 ChatCompletionCreateParams.builder()
                         .model("anthropic/claude-haiku-4.5")
                         .addUserMessage(prompt)
+                        .addTool(ReadFileTool.class)
                         .build()
         );
 
