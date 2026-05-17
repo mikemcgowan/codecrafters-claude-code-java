@@ -3,8 +3,6 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
-import tools.ReadFileTool;
-
 public class Main {
     public static void main(String[] args) {
         if (args.length < 2 || !"-p".equals(args[0])) {
@@ -33,7 +31,7 @@ public class Main {
                 ChatCompletionCreateParams.builder()
                         .model("anthropic/claude-haiku-4.5")
                         .addUserMessage(prompt)
-                        .addTool(ReadFileTool.class)
+                        .addTool(readTool())
                         .build()
         );
 
@@ -46,5 +44,26 @@ public class Main {
 
         // TODO: Uncomment the line below to pass the first stage
         System.out.print(response.choices().get(0).message().content().orElse(""));
+    }
+
+    private ChatCompletionTool readTool() {
+        return ChatCompletionTool.builder()
+            .type(JsonValue.from("function"))
+            .function(JsonValue.from(Map.of(
+                "type", "object",
+                "name", "Read",
+                "description", "Read and return the contents of a file",
+                "parameters", Map.of(
+                    "type", "object",
+                    "properties", Map.of(
+                        "file_path", Map.of(
+                         "type", "string",
+                            "description", "The path to the file to read"
+                        )
+                    ),
+                    "required", java.util.List.of("file_path")
+                )
+            )))
+            .build();
     }
 }
