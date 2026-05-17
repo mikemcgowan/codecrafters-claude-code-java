@@ -1,7 +1,10 @@
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
+import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -46,7 +49,7 @@ public class Main {
         System.out.print(response.choices().get(0).message().content().orElse(""));
     }
 
-    private ChatCompletionTool readTool() {
+    private static ChatCompletionTool readTool() {
         return ChatCompletionTool.builder()
             .type(JsonValue.from("function"))
             .function(JsonValue.from(Map.of(
