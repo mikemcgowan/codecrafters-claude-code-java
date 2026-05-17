@@ -51,8 +51,8 @@ public class Main {
 
     private static ChatCompletionTool readTool() {
         return ChatCompletionTool.builder()
-            .type(JsonValue.from("function"))
-            .function(JsonValue.from(Map.of(
+            .type("function")
+            .function(Map.of(
                 "type", "object",
                 "name", "Read",
                 "description", "Read and return the contents of a file",
@@ -66,7 +66,7 @@ public class Main {
                     ),
                     "required", java.util.List.of("file_path")
                 )
-            )))
+            ))
             .build();
     }
 }
