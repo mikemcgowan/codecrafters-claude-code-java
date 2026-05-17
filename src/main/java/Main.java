@@ -1,3 +1,4 @@
+import com.openai.core.JsonValue;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
@@ -51,8 +52,8 @@ public class Main {
 
     private static ChatCompletionTool readTool() {
         return ChatCompletionTool.builder()
-            .type("function")
-            .function(Map.of(
+            .type(JsonValue.from("function"))
+            .function(JsonValue.from(Map.of(
                 "type", "object",
                 "name", "Read",
                 "description", "Read and return the contents of a file",
@@ -66,7 +67,7 @@ public class Main {
                     ),
                     "required", java.util.List.of("file_path")
                 )
-            ))
+            )))
             .build();
     }
 }
