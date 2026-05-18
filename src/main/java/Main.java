@@ -16,7 +16,7 @@ import java.util.Map;
 public class Main {
 
     private enum FunctionNames {
-        READ;
+        Read;
     }
 
     public static void main(String[] args) {
@@ -100,7 +100,7 @@ public class Main {
         reader.close();
 
         switch (functionName) {
-            case READ -> readFunction(jsonObject.getString("file_path"));
+            case Read -> readFunction(jsonObject.getString("file_path"));
             default -> throw new RuntimeException("Unknown function: " + functionName);
         }
     }
