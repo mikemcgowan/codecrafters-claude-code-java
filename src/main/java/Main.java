@@ -6,7 +6,11 @@ import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
+import jakarta.json.Json;
+import jakarta.json.JsonReader;
+
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -89,10 +93,10 @@ public class Main {
     private static void callFunction(String functionName, String functionArgs) {
         switch (functionName) {
             case "Read" -> {
-                final var json = (JsonObject) JsonValue.from(functionArgs);
-                readFunction(json.values()
-                                 .get("file_path")
-                                 .asStringOrThrow());
+                final var reader = Json.createReader(new StringReader(functionArgs));
+                final var jsonObject = reader.readObject();
+                reader.close();
+                readFunction(jsonObject.getString("file_path"));
             }
             default -> throw new RuntimeException("Unknown function: " + functionName);
         }
