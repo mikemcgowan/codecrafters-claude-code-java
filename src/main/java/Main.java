@@ -17,57 +17,58 @@ public class Main {
 
     private static final String MODEL = "anthropic/claude-haiku-4.5";
 
-    private enum FunctionNames {
-        READ;
-    }
-
     public static void main(String[] args) {
         final var client = getClient(args);
         final var messages = new LinkedList<Message>();
         messages.add(new Message(Role.USER, args[1], null));
         boolean gotToolCall = true;
         while (gotToolCall) {
-            final var params = ChatCompletionCreateParams.builder()
-                                                         .model(MODEL)
-                                                         .addTool(readTool());
-            messages.forEach(message -> {
-                switch (message.role()) {
-                    case USER -> params.addUserMessage(message.content());
-                    case TOOL -> params.addUserMessage("Tool result: " + message.content());
-                    case ASSISTANT -> System.err.println("Don't know how to handle messages for assistant!");
-                }
-            });
-            final var response = client.chat()
-                                       .completions()
-                                       .create(params.build());
-
-            if (response.choices()
-                        .isEmpty()) {
-                throw new RuntimeException("no choices in response");
-            }
-
-            final var choiceZero = response.choices()
-                                           .get(0);
-            final var message = choiceZero.message();
-            final var messageStr = message.content()
-                                          .orElse("");
-            messages.add(new Message(Role.ASSISTANT, messageStr, null));
-            if (message.toolCalls()
-                       .isPresent()) {
-                final var toolCalls = message.toolCalls()
-                                             .get();
-                toolCalls.forEach(toolCall -> {
-                    final var function = toolCall.function();
-                    final var functionName = function.name();
-                    final var functionArgs = function.arguments();
-                    final var result = callFunction(FunctionNames.valueOf(functionName.toUpperCase()), functionArgs);
-                    messages.add(new Message(Role.TOOL, result, toolCall.id()));
-                });
-            } else {
-                gotToolCall = false;
-                System.out.print(messageStr);
-            }
+            gotToolCall = callApi(client, messages);
         }
+    }
+
+    private static boolean callApi(OpenAIClient client, LinkedList<Message> messages) {
+        final var params = ChatCompletionCreateParams.builder()
+                                                     .model(MODEL)
+                                                     .addTool(readTool());
+        messages.forEach(message -> {
+            switch (message.role()) {
+                case USER -> params.addUserMessage(message.content());
+                case TOOL -> params.addUserMessage("Tool result: " + message.content());
+            }
+        });
+        final var response = client.chat()
+                                   .completions()
+                                   .create(params.build());
+
+        if (response.choices()
+                    .isEmpty()) {
+            throw new RuntimeException("no choices in response");
+        }
+
+        final var choiceZero = response.choices()
+                                       .get(0);
+        final var message = choiceZero.message();
+        final var messageStr = message.content()
+                                      .orElse("");
+        messages.add(new Message(Role.ASSISTANT, messageStr));
+
+        if (message.toolCalls()
+                   .isEmpty()) {
+            System.out.print(messageStr);
+            return false;
+        }
+
+        final var toolCalls = message.toolCalls()
+                                     .get();
+        toolCalls.forEach(toolCall -> {
+            final var function = toolCall.function();
+            final var functionName = function.name();
+            final var functionArgs = function.arguments();
+            final var result = callFunction(FunctionName.valueOf(functionName.toUpperCase()), functionArgs);
+            messages.add(new Message(Role.TOOL, result, toolCall.id()));
+        });
+        return true;
     }
 
     private static OpenAIClient getClient(String[] args) {
@@ -113,7 +114,7 @@ public class Main {
                                  .build();
     }
 
-    private static String callFunction(Main.FunctionNames functionName, String functionArgs) {
+    private static String callFunction(FunctionName functionName, String functionArgs) {
         final var reader = Json.createReader(new StringReader(functionArgs));
         final var jsonObject = reader.readObject();
         reader.close();
