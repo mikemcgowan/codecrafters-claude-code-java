@@ -21,20 +21,22 @@ public class Main {
         READ;
     }
 
-    private enum Roles {
-        USER, ASSISTANT, TOOL;
-    }
-
     public static void main(String[] args) {
         final var client = getClient(args);
         final var messages = new LinkedList<Message>();
-        messages.add(new Message(Roles.USER.name(), args[1], null));
+        messages.add(new Message(Role.USER, args[1], null));
         boolean gotToolCall = true;
         while (gotToolCall) {
             final var params = ChatCompletionCreateParams.builder()
                                                          .model(MODEL)
                                                          .addTool(readTool());
-            messages.forEach(message -> params.addUserMessage(message.content()));
+            messages.forEach(message -> {
+                switch (message.role()) {
+                    case USER -> params.addUserMessage(message.content());
+                    case TOOL -> params.addUserMessage("Tool result: " + message.content());
+                    case ASSISTANT -> System.err.println("Don't know how to handle messages for assistant!");
+                }
+            });
             final var response = client.chat()
                                        .completions()
                                        .create(params.build());
@@ -49,7 +51,7 @@ public class Main {
             final var message = choiceZero.message();
             final var messageStr = message.content()
                                           .orElse("");
-            messages.add(new Message(Roles.ASSISTANT.name(), messageStr, null));
+            messages.add(new Message(Role.ASSISTANT, messageStr, null));
             if (message.toolCalls()
                        .isPresent()) {
                 final var toolCalls = message.toolCalls()
@@ -59,7 +61,7 @@ public class Main {
                     final var functionName = function.name();
                     final var functionArgs = function.arguments();
                     final var result = callFunction(FunctionNames.valueOf(functionName.toUpperCase()), functionArgs);
-                    messages.add(new Message(Roles.TOOL.name(), result, toolCall.id()));
+                    messages.add(new Message(Role.TOOL, result, toolCall.id()));
                 });
             } else {
                 gotToolCall = false;

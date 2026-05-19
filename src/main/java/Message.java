@@ -1,2 +1,2 @@
-public record Message(String role, String content, String toolCallId) {
+public record Message(Role role, String content, String toolCallId) {
 }
