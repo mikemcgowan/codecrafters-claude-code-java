@@ -1,7 +1,6 @@
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.core.JsonValue;
-import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionTool;
 
@@ -11,21 +10,69 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.Map;
 
 public class Main {
 
+    private static final String MODEL = "anthropic/claude-haiku-4.5";
+
     private enum FunctionNames {
-        Read;
+        READ;
+    }
+
+    private enum Roles {
+        USER, ASSISTANT, TOOL;
     }
 
     public static void main(String[] args) {
+        final var client = getClient(args);
+        final var messages = new LinkedList<Message>();
+        messages.add(new Message(Roles.USER.name(), args[1], null));
+        boolean gotToolCall = true;
+        while (gotToolCall) {
+            final var params = ChatCompletionCreateParams.builder()
+                                                         .model(MODEL)
+                                                         .addTool(readTool());
+            messages.forEach(message -> params.addUserMessage(message.content()));
+            final var response = client.chat()
+                                       .completions()
+                                       .create(params.build());
+
+            if (response.choices()
+                        .isEmpty()) {
+                throw new RuntimeException("no choices in response");
+            }
+
+            final var choiceZero = response.choices()
+                                           .get(0);
+            final var message = choiceZero.message();
+            final var messageStr = message.content()
+                                          .orElse("");
+            messages.add(new Message(Roles.ASSISTANT.name(), messageStr, null));
+            if (message.toolCalls()
+                       .isPresent()) {
+                final var toolCalls = message.toolCalls()
+                                             .get();
+                toolCalls.forEach(toolCall -> {
+                    final var function = toolCall.function();
+                    final var functionName = function.name();
+                    final var functionArgs = function.arguments();
+                    final var result = callFunction(FunctionNames.valueOf(functionName.toUpperCase()), functionArgs);
+                    messages.add(new Message(Roles.TOOL.name(), result, toolCall.id()));
+                });
+            } else {
+                gotToolCall = false;
+                System.out.print(messageStr);
+            }
+        }
+    }
+
+    private static OpenAIClient getClient(String[] args) {
         if (args.length < 2 || !"-p".equals(args[0])) {
             System.err.println("Usage: program -p <prompt>");
             System.exit(1);
         }
-
-        String prompt = args[1];
 
         String apiKey = System.getenv("OPENROUTER_API_KEY");
         String baseUrl = System.getenv("OPENROUTER_BASE_URL");
@@ -37,40 +84,10 @@ public class Main {
             throw new RuntimeException("OPENROUTER_API_KEY is not set");
         }
 
-        OpenAIClient client = OpenAIOkHttpClient.builder()
-                                                .apiKey(apiKey)
-                                                .baseUrl(baseUrl)
-                                                .build();
-
-        ChatCompletion response = client.chat()
-                                        .completions()
-                                        .create(
-                                            ChatCompletionCreateParams.builder()
-                                                                      .model("anthropic/claude-haiku-4.5")
-                                                                      .addUserMessage(prompt)
-                                                                      .addTool(readTool())
-                                                                      .build()
-                                        );
-
-        if (response.choices()
-                    .isEmpty()) {
-            throw new RuntimeException("no choices in response");
-        }
-
-        final var choiceZero = response.choices()
-                                       .get(0);
-        final var message = choiceZero.message();
-        message.toolCalls()
-               .ifPresentOrElse(toolCalls -> {
-                                    final var toolCallZero = toolCalls.get(0);
-                                    final var function = toolCallZero.function();
-                                    final var functionName = function.name();
-                                    final var functionArgs = function.arguments();
-                                    callFunction(FunctionNames.valueOf(functionName), functionArgs);
-                                }, () -> System.out.print(choiceZero.message()
-                                                                    .content()
-                                                                    .orElse(""))
-               );
+        return OpenAIOkHttpClient.builder()
+                                 .apiKey(apiKey)
+                                 .baseUrl(baseUrl)
+                                 .build();
     }
 
     private static ChatCompletionTool readTool() {
@@ -94,22 +111,23 @@ public class Main {
                                  .build();
     }
 
-    private static void callFunction(FunctionNames functionName, String functionArgs) {
+    private static String callFunction(Main.FunctionNames functionName, String functionArgs) {
         final var reader = Json.createReader(new StringReader(functionArgs));
         final var jsonObject = reader.readObject();
         reader.close();
 
-        switch (functionName) {
-            case Read -> readFunction(jsonObject.getString("file_path"));
-            default -> throw new RuntimeException("Unknown function: " + functionName);
-        }
+        return switch (functionName) {
+            case READ -> readFunction(jsonObject.getString("file_path"));
+        };
     }
 
-    private static void readFunction(String filePath) {
+    private static String readFunction(String filePath) {
         try {
-            System.out.println(Files.readString(Path.of(filePath)));
+            return Files.readString(Path.of(filePath));
         } catch (IOException e) {
             System.err.println("Couldn't read file: " + filePath);
+            System.err.println(e.getMessage());
+            return null;
         }
     }
 }
