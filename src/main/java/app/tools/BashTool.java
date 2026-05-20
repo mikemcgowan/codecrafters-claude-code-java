@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class BashTool implements Tool {
@@ -28,7 +29,7 @@ public class BashTool implements Tool {
                                  .type(JsonValue.from("function"))
                                  .function(JsonValue.from(Map.of(
                                      "type", "object",
-                                     "name", "Bash",
+                                     "name", toolName().ucFirst(),
                                      "description", "Execute a command shell",
                                      "parameters", Map.of(
                                          "type", "object",
@@ -38,7 +39,7 @@ public class BashTool implements Tool {
                                                  "description", "The command to execute"
                                              )
                                          ),
-                                         "required", java.util.List.of(PARAM)
+                                         "required", List.of(PARAM)
                                      )
                                  )))
                                  .build();

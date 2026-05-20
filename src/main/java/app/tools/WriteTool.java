@@ -10,6 +10,7 @@ import jakarta.json.JsonObject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 public class WriteTool implements Tool {
@@ -28,7 +29,7 @@ public class WriteTool implements Tool {
                                  .type(JsonValue.from("function"))
                                  .function(JsonValue.from(Map.of(
                                      "type", "object",
-                                     "name", "Write",
+                                     "name", toolName().ucFirst(),
                                      "description", "Write content to a file",
                                      "parameters", Map.of(
                                          "type", "object",
@@ -42,7 +43,7 @@ public class WriteTool implements Tool {
                                                  "description", "The content to write to the file"
                                              )
                                          ),
-                                         "required", java.util.List.of(PARAM1, PARAM2)
+                                         "required", List.of(PARAM1, PARAM2)
                                      )
                                  )))
                                  .build();
