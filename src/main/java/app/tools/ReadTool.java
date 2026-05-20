@@ -17,7 +17,7 @@ public class ReadTool implements Tool {
     private static final String PARAM = "file_path";
 
     @Override
-    public ToolName functionName() {
+    public ToolName toolName() {
         return READ;
     }
 

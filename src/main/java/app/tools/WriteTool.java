@@ -18,7 +18,7 @@ public class WriteTool implements Tool {
     private static final String PARAM2 = "content";
 
     @Override
-    public ToolName functionName() {
+    public ToolName toolName() {
         return WRITE;
     }
 

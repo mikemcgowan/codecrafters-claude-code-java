@@ -6,7 +6,7 @@ import jakarta.json.JsonObject;
 
 public interface Tool {
 
-    ToolName functionName();
+    ToolName toolName();
 
     ChatCompletionTool definition();
 

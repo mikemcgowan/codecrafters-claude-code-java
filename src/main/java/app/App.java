@@ -103,7 +103,7 @@ public class App {
         reader.close();
 
         return tools.stream()
-                    .filter(tool -> tool.functionName()
+                    .filter(tool -> tool.toolName()
                                         .equals(toolName))
                     .map(tool -> tool.exec(jsonObject))
                     .findFirst();

@@ -18,7 +18,7 @@ public class BashTool implements Tool {
     private static final String PARAM = "command";
 
     @Override
-    public ToolName functionName() {
+    public ToolName toolName() {
         return BASH;
     }
 
