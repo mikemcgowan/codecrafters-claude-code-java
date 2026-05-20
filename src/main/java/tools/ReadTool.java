@@ -39,9 +39,10 @@ public class ReadTool implements Tool {
         try {
             return Optional.of(Files.readString(Path.of(filePath)));
         } catch (IOException e) {
-            System.err.println("Couldn't read file: " + filePath);
+            final var msg = "Couldn't read file: " + filePath;
+            System.err.println(msg);
             System.err.println(e.getMessage());
-            return Optional.empty();
+            return Optional.of(msg);
         }
     }
 }

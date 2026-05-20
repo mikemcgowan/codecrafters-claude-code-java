@@ -42,13 +42,18 @@ public class WriteTool implements Tool {
         final var filePath = jsonObject.getString("file_path");
         final var content = jsonObject.getString("content");
         try {
-            Path path = Path.of(filePath);
-            Files.createDirectories(path.getParent());
+            final var path = Path.of(filePath);
+            final var parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(path.getParent());
+            }
             Files.writeString(path, content);
+            return Optional.of("File written successfully");
         } catch (IOException e) {
-            System.err.println("Couldn't write file: " + filePath);
+            final var msg = "Couldn't write file: " + filePath;
+            System.err.println(msg);
             System.err.println(e.getMessage());
+            return Optional.of(msg);
         }
-        return Optional.empty();
     }
 }
