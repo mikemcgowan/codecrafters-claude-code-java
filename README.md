@@ -9,7 +9,7 @@ you'll build your own Claude Code from scratch by implementing an LLM-powered
 coding assistant.
 
 Along the way you'll learn about HTTP RESTful APIs, OpenAI-compatible tool
-calling, agent loop, and how to integrate multiple tools into an AI assistant.
+calling, agent loop, and how to integrate multiple app.tools into an AI assistant.
 
 **Note**: If you're viewing this repo on GitHub, head over to
 [codecrafters.io](https://codecrafters.io) to try the challenge.

@@ -1,6 +1,6 @@
-package tools;
+package app.tools;
 
-import static tools.FunctionName.WRITE;
+import static app.tools.ToolName.READ;
 
 import com.openai.core.JsonValue;
 import com.openai.models.chat.completions.ChatCompletionTool;
@@ -12,11 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class WriteTool implements Tool {
+public class ReadTool implements Tool {
 
     @Override
-    public FunctionName functionName() {
-        return WRITE;
+    public ToolName functionName() {
+        return READ;
     }
 
     @Override
@@ -25,21 +25,17 @@ public class WriteTool implements Tool {
                                  .type(JsonValue.from("function"))
                                  .function(JsonValue.from(Map.of(
                                      "type", "object",
-                                     "name", "Write",
-                                     "description", "Write content to a file",
+                                     "name", "Read",
+                                     "description", "Read and return the contents of a file",
                                      "parameters", Map.of(
                                          "type", "object",
                                          "properties", Map.of(
                                              "file_path", Map.of(
                                                  "type", "string",
-                                                 "description", "The path to the file to write to"
-                                             ),
-                                             "content", Map.of(
-                                                 "type", "string",
-                                                 "description", "The content to write to the file"
+                                                 "description", "The path to the file to read"
                                              )
                                          ),
-                                         "required", java.util.List.of("file_path", "content")
+                                         "required", java.util.List.of("file_path")
                                      )
                                  )))
                                  .build();
@@ -48,17 +44,10 @@ public class WriteTool implements Tool {
     @Override
     public String exec(JsonObject jsonObject) {
         final var filePath = jsonObject.getString("file_path");
-        final var content = jsonObject.getString("content");
         try {
-            final var path = Path.of(filePath);
-            final var parent = path.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            Files.writeString(path, content);
-            return "File written successfully";
+            return Files.readString(Path.of(filePath));
         } catch (IOException e) {
-            final var msg = "Couldn't write file: " + filePath;
+            final var msg = "Couldn't read file: " + filePath;
             System.err.println(msg);
             System.err.println(e.getMessage());
             return msg;

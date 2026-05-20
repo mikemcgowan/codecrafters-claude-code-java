@@ -1,6 +1,9 @@
+package app;
+
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 
 import jakarta.json.Json;
@@ -9,10 +12,10 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Optional;
 
-import tools.FunctionName;
-import tools.ReadTool;
-import tools.Tool;
-import tools.WriteTool;
+import app.tools.ReadTool;
+import app.tools.Tool;
+import app.tools.ToolName;
+import app.tools.WriteTool;
 
 public class App {
 
@@ -52,14 +55,7 @@ public class App {
 
         final var toolCalls = optToolCalls.get();
         messages.add(new Message(Role.ASSISTANT, messageStr, toolCalls));
-        toolCalls.forEach(toolCall -> {
-            final var function = toolCall.function();
-            final var functionName = function.name();
-            final var functionArgs = function.arguments();
-            callFunction(
-                FunctionName.valueOf(functionName.toUpperCase()),
-                functionArgs).ifPresent(result -> messages.add(new Message(Role.TOOL, result, toolCall.id())));
-        });
+        processToolCalls(toolCalls);
         return true;
     }
 
@@ -89,14 +85,25 @@ public class App {
         return params.build();
     }
 
-    private Optional<String> callFunction(FunctionName functionName, String functionArgs) {
+    private void processToolCalls(List<ChatCompletionMessageToolCall> toolCalls) {
+        toolCalls.forEach(toolCall -> {
+            final var function = toolCall.function();
+            final var functionName = function.name();
+            final var functionArgs = function.arguments();
+            callFunction(
+                ToolName.valueOf(functionName.toUpperCase()),
+                functionArgs).ifPresent(result -> messages.add(new Message(Role.TOOL, result, toolCall.id())));
+        });
+    }
+
+    private Optional<String> callFunction(ToolName toolName, String functionArgs) {
         final var reader = Json.createReader(new StringReader(functionArgs));
         final var jsonObject = reader.readObject();
         reader.close();
 
         return tools.stream()
                     .filter(tool -> tool.functionName()
-                                        .equals(functionName))
+                                        .equals(toolName))
                     .map(tool -> tool.exec(jsonObject))
                     .findFirst();
     }

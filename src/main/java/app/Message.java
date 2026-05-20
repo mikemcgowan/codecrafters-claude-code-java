@@ -1,3 +1,5 @@
+package app;
+
 import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 
 import java.util.List;

@@ -1,14 +1,12 @@
-package tools;
+package app.tools;
 
 import com.openai.models.chat.completions.ChatCompletionTool;
 
 import jakarta.json.JsonObject;
 
-import java.util.Optional;
-
 public interface Tool {
 
-    FunctionName functionName();
+    ToolName functionName();
 
     ChatCompletionTool definition();
 
