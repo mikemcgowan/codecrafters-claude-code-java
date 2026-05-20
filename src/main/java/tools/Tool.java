@@ -8,7 +8,9 @@ import java.util.Optional;
 
 public interface Tool {
 
+    FunctionName functionName();
+
     ChatCompletionTool definition();
 
-    Optional<String> exec(JsonObject jsonObject);
+    String exec(JsonObject jsonObject);
 }

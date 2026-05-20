@@ -9,7 +9,9 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Optional;
 
+import tools.FunctionName;
 import tools.ReadTool;
+import tools.Tool;
 import tools.WriteTool;
 
 public class App {
@@ -18,43 +20,18 @@ public class App {
 
     private final OpenAIClient client;
     private final List<Message> messages;
-    private final ReadTool readTool;
-    private final WriteTool writeTool;
+    private final List<Tool> tools;
 
     public App(OpenAIClient client, List<Message> messages) {
         this.client = client;
         this.messages = messages;
-        this.readTool = new ReadTool();
-        this.writeTool = new WriteTool();
+        this.tools = List.of(new ReadTool(), new WriteTool());
     }
 
     public boolean callApi() {
-        final var params = ChatCompletionCreateParams.builder()
-                                                     .model(MODEL)
-                                                     .addTool(readTool.definition())
-                                                     .addTool(writeTool.definition());
-        messages.forEach(message -> {
-            switch (message.role()) {
-                case USER -> params.addUserMessage(message.content());
-                case TOOL -> {
-                    final var msg = ChatCompletionToolMessageParam.builder()
-                                                                  .toolCallId(message.toolCallId())
-                                                                  .content(message.content())
-                                                                  .build();
-                    params.addMessage(msg);
-                }
-                case ASSISTANT -> {
-                    final var msg = ChatCompletionAssistantMessageParam.builder()
-                                                                       .toolCalls(message.toolCalls())
-                                                                       .content(message.content())
-                                                                       .build();
-                    params.addMessage(msg);
-                }
-            }
-        });
         final var response = client.chat()
                                    .completions()
-                                   .create(params.build());
+                                   .create(prepareParams());
 
         if (response.choices()
                     .isEmpty()) {
@@ -86,14 +63,41 @@ public class App {
         return true;
     }
 
+    private ChatCompletionCreateParams prepareParams() {
+        final var params = ChatCompletionCreateParams.builder()
+                                                     .model(MODEL);
+        tools.forEach(tool -> params.addTool(tool.definition()));
+        messages.forEach(message -> {
+            switch (message.role()) {
+                case USER -> params.addUserMessage(message.content());
+                case TOOL -> {
+                    final var msg = ChatCompletionToolMessageParam.builder()
+                                                                  .toolCallId(message.toolCallId())
+                                                                  .content(message.content())
+                                                                  .build();
+                    params.addMessage(msg);
+                }
+                case ASSISTANT -> {
+                    final var msg = ChatCompletionAssistantMessageParam.builder()
+                                                                       .toolCalls(message.toolCalls())
+                                                                       .content(message.content())
+                                                                       .build();
+                    params.addMessage(msg);
+                }
+            }
+        });
+        return params.build();
+    }
+
     private Optional<String> callFunction(FunctionName functionName, String functionArgs) {
         final var reader = Json.createReader(new StringReader(functionArgs));
         final var jsonObject = reader.readObject();
         reader.close();
 
-        return switch (functionName) {
-            case READ -> readTool.exec(jsonObject);
-            case WRITE -> writeTool.exec(jsonObject);
-        };
+        return tools.stream()
+                    .filter(tool -> tool.functionName()
+                                        .equals(functionName))
+                    .map(tool -> tool.exec(jsonObject))
+                    .findFirst();
     }
 }

@@ -1,5 +1,7 @@
 package tools;
 
+import static tools.FunctionName.WRITE;
+
 import com.openai.core.JsonValue;
 import com.openai.models.chat.completions.ChatCompletionTool;
 
@@ -9,10 +11,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 
 public class WriteTool implements Tool {
 
+    @Override
+    public FunctionName functionName() {
+        return WRITE;
+    }
+
+    @Override
     public ChatCompletionTool definition() {
         return ChatCompletionTool.builder()
                                  .type(JsonValue.from("function"))
@@ -38,7 +45,8 @@ public class WriteTool implements Tool {
                                  .build();
     }
 
-    public Optional<String> exec(JsonObject jsonObject) {
+    @Override
+    public String exec(JsonObject jsonObject) {
         final var filePath = jsonObject.getString("file_path");
         final var content = jsonObject.getString("content");
         try {
@@ -48,12 +56,12 @@ public class WriteTool implements Tool {
                 Files.createDirectories(parent);
             }
             Files.writeString(path, content);
-            return Optional.of("File written successfully");
+            return "File written successfully";
         } catch (IOException e) {
             final var msg = "Couldn't write file: " + filePath;
             System.err.println(msg);
             System.err.println(e.getMessage());
-            return Optional.of(msg);
+            return msg;
         }
     }
 }

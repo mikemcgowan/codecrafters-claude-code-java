@@ -1,5 +1,7 @@
 package tools;
 
+import static tools.FunctionName.READ;
+
 import com.openai.core.JsonValue;
 import com.openai.models.chat.completions.ChatCompletionTool;
 
@@ -9,10 +11,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 
 public class ReadTool implements Tool {
 
+    @Override
+    public FunctionName functionName() {
+        return READ;
+    }
+
+    @Override
     public ChatCompletionTool definition() {
         return ChatCompletionTool.builder()
                                  .type(JsonValue.from("function"))
@@ -34,15 +41,16 @@ public class ReadTool implements Tool {
                                  .build();
     }
 
-    public Optional<String> exec(JsonObject jsonObject) {
+    @Override
+    public String exec(JsonObject jsonObject) {
         final var filePath = jsonObject.getString("file_path");
         try {
-            return Optional.of(Files.readString(Path.of(filePath)));
+            return Files.readString(Path.of(filePath));
         } catch (IOException e) {
             final var msg = "Couldn't read file: " + filePath;
             System.err.println(msg);
             System.err.println(e.getMessage());
-            return Optional.of(msg);
+            return msg;
         }
     }
 }
