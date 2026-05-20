@@ -1,5 +1,7 @@
 package app.tools;
 
 public enum ToolName {
-    READ, WRITE, BASH;
+    READ,
+    WRITE,
+    BASH;
 }

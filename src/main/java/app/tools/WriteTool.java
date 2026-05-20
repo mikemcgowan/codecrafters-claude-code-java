@@ -14,6 +14,9 @@ import java.util.Map;
 
 public class WriteTool implements Tool {
 
+    private static final String PARAM1 = "file_path";
+    private static final String PARAM2 = "content";
+
     @Override
     public ToolName functionName() {
         return WRITE;
@@ -30,16 +33,16 @@ public class WriteTool implements Tool {
                                      "parameters", Map.of(
                                          "type", "object",
                                          "properties", Map.of(
-                                             "file_path", Map.of(
+                                             PARAM1, Map.of(
                                                  "type", "string",
                                                  "description", "The path to the file to write to"
                                              ),
-                                             "content", Map.of(
+                                             PARAM2, Map.of(
                                                  "type", "string",
                                                  "description", "The content to write to the file"
                                              )
                                          ),
-                                         "required", java.util.List.of("file_path", "content")
+                                         "required", java.util.List.of(PARAM1, PARAM2)
                                      )
                                  )))
                                  .build();
@@ -47,8 +50,8 @@ public class WriteTool implements Tool {
 
     @Override
     public String exec(JsonObject jsonObject) {
-        final var filePath = jsonObject.getString("file_path");
-        final var content = jsonObject.getString("content");
+        final var filePath = jsonObject.getString(PARAM1);
+        final var content = jsonObject.getString(PARAM2);
         try {
             final var path = Path.of(filePath);
             final var parent = path.getParent();
@@ -57,11 +60,8 @@ public class WriteTool implements Tool {
             }
             Files.writeString(path, content);
             return "File written successfully";
-        } catch (IOException e) {
-            final var msg = "Couldn't write file: " + filePath;
-            System.err.println(msg);
-            System.err.println(e.getMessage());
-            return msg;
+        } catch (IOException _) {
+            return "Couldn't write file: " + filePath;
         }
     }
 }

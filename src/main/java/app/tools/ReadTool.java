@@ -14,6 +14,8 @@ import java.util.Map;
 
 public class ReadTool implements Tool {
 
+    private static final String PARAM = "file_path";
+
     @Override
     public ToolName functionName() {
         return READ;
@@ -30,12 +32,12 @@ public class ReadTool implements Tool {
                                      "parameters", Map.of(
                                          "type", "object",
                                          "properties", Map.of(
-                                             "file_path", Map.of(
+                                             PARAM, Map.of(
                                                  "type", "string",
                                                  "description", "The path to the file to read"
                                              )
                                          ),
-                                         "required", java.util.List.of("file_path")
+                                         "required", java.util.List.of(PARAM)
                                      )
                                  )))
                                  .build();
@@ -43,14 +45,11 @@ public class ReadTool implements Tool {
 
     @Override
     public String exec(JsonObject jsonObject) {
-        final var filePath = jsonObject.getString("file_path");
+        final var filePath = jsonObject.getString(PARAM);
         try {
             return Files.readString(Path.of(filePath));
-        } catch (IOException e) {
-            final var msg = "Couldn't read file: " + filePath;
-            System.err.println(msg);
-            System.err.println(e.getMessage());
-            return msg;
+        } catch (IOException _) {
+            return "Couldn't read file: " + filePath;
         }
     }
 }

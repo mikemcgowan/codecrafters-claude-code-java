@@ -43,7 +43,7 @@ public class App {
         }
 
         final var choiceZero = response.choices()
-                                       .get(0);
+                                       .getFirst();
         final var message = choiceZero.message();
         final var messageStr = message.content()
                                       .orElse("");

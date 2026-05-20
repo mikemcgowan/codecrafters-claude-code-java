@@ -8,11 +8,14 @@ import com.openai.models.chat.completions.ChatCompletionTool;
 import jakarta.json.JsonObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 
 public class BashTool implements Tool {
+
+    private static final String PARAM = "command";
 
     @Override
     public ToolName functionName() {
@@ -30,12 +33,12 @@ public class BashTool implements Tool {
                                      "parameters", Map.of(
                                          "type", "object",
                                          "properties", Map.of(
-                                             "command", Map.of(
+                                             PARAM, Map.of(
                                                  "type", "string",
                                                  "description", "The command to execute"
                                              )
                                          ),
-                                         "required", java.util.List.of("command")
+                                         "required", java.util.List.of(PARAM)
                                      )
                                  )))
                                  .build();
@@ -43,26 +46,20 @@ public class BashTool implements Tool {
 
     @Override
     public String exec(JsonObject jsonObject) {
-        final var command = jsonObject.getString("command");
+        final var command = jsonObject.getString(PARAM);
         try {
-            String[] parts = command.split("\\s+");
+            final var parts = command.split("\\s+");
             final var processBuilder = new ProcessBuilder(parts);
             final var process = processBuilder.start();
             final var reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             final var lines = new ArrayList<String>();
             String line;
             while ((line = reader.readLine()) != null) {
-                System.err.println(line);
                 lines.add(line);
             }
-            final var exitCode = process.waitFor();
-            System.err.println("Exited with code: " + exitCode);
             return lines.toString();
-        } catch (Exception e) {
-            final var msg = "Couldn't execute command: " + command;
-            System.err.println(msg);
-            System.err.println(e.getMessage());
-            return msg;
+        } catch (IOException _) {
+            return "Couldn't execute command: " + command;
         }
     }
 }
