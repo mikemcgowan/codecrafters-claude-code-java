@@ -1,4 +1,5 @@
 import com.openai.client.OpenAIClient;
+import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 
@@ -40,6 +41,12 @@ public class App {
                                                                   .toolCallId(message.toolCallId())
                                                                   .content(message.content())
                                                                   .build();
+                    params.addMessage(msg);
+                }
+                case ASSISTANT -> {
+                    final var msg = ChatCompletionAssistantMessageParam.builder()
+                                                                       .content(message.content())
+                                                                       .build();
                     params.addMessage(msg);
                 }
             }
