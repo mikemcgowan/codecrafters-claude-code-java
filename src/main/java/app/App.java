@@ -12,6 +12,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Optional;
 
+import app.tools.BashTool;
 import app.tools.ReadTool;
 import app.tools.Tool;
 import app.tools.ToolName;
@@ -28,7 +29,7 @@ public class App {
     public App(OpenAIClient client, List<Message> messages) {
         this.client = client;
         this.messages = messages;
-        this.tools = List.of(new ReadTool(), new WriteTool());
+        this.tools = List.of(new ReadTool(), new WriteTool(), new BashTool());
     }
 
     public boolean callApi() {
