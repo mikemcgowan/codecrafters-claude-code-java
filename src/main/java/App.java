@@ -1,5 +1,6 @@
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 
 import jakarta.json.Json;
 
@@ -34,7 +35,13 @@ public class App {
         messages.forEach(message -> {
             switch (message.role()) {
                 case USER -> params.addUserMessage(message.content());
-                case TOOL -> params.addUserMessage("Tool result from tool call " + message.toolCallId() + ": " + message.content());
+                case TOOL -> {
+                    final var msg = ChatCompletionToolMessageParam.builder()
+                                                                  .toolCallId(message.toolCallId())
+                                                                  .content(message.content())
+                                                                  .build();
+                    params.addMessage(msg);
+                }
             }
         });
         final var response = client.chat()
