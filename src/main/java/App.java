@@ -14,15 +14,19 @@ public class App {
 
     private static final String MODEL = "anthropic/claude-haiku-4.5";
 
+    private final OpenAIClient client;
+    private final List<Message> messages;
     private final ReadTool readTool;
     private final WriteTool writeTool;
 
-    public App() {
+    public App(OpenAIClient client, List<Message> messages) {
+        this.client = client;
+        this.messages = messages;
         this.readTool = new ReadTool();
         this.writeTool = new WriteTool();
     }
 
-    public boolean callApi(OpenAIClient client, List<Message> messages) {
+    public boolean callApi() {
         final var params = ChatCompletionCreateParams.builder()
                                                      .model(MODEL)
                                                      .addTool(readTool.definition())
@@ -30,7 +34,7 @@ public class App {
         messages.forEach(message -> {
             switch (message.role()) {
                 case USER -> params.addUserMessage(message.content());
-                case TOOL -> params.addUserMessage("Tool result: " + message.content());
+                case TOOL -> params.addUserMessage("Tool result from tool call " + message.toolCallId() + ": " + message.content());
             }
         });
         final var response = client.chat()

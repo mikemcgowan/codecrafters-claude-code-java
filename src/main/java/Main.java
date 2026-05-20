@@ -10,9 +10,9 @@ public class Main {
         final var messages = new LinkedList<Message>();
         messages.add(new Message(Role.USER, args[1], null));
         boolean gotToolCall = true;
-        final var app = new App();
+        final var app = new App(client, messages);
         while (gotToolCall) {
-            gotToolCall = app.callApi(client, messages);
+            gotToolCall = app.callApi();
         }
     }
 
