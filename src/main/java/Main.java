@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         final var client = getClient(args);
         final var messages = new LinkedList<Message>();
-        messages.add(new Message(Role.USER, args[1], null));
+        messages.add(new Message(Role.USER, args[1]));
         boolean gotToolCall = true;
         final var app = new App(client, messages);
         while (gotToolCall) {

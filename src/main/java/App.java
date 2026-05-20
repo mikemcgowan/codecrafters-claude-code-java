@@ -45,6 +45,7 @@ public class App {
                 }
                 case ASSISTANT -> {
                     final var msg = ChatCompletionAssistantMessageParam.builder()
+                                                                       .toolCalls(message.toolCalls())
                                                                        .content(message.content())
                                                                        .build();
                     params.addMessage(msg);
@@ -65,7 +66,6 @@ public class App {
         final var message = choiceZero.message();
         final var messageStr = message.content()
                                       .orElse("");
-        messages.add(new Message(Role.ASSISTANT, messageStr));
 
         final var optToolCalls = message.toolCalls();
         if (optToolCalls.isEmpty()) {
@@ -74,6 +74,7 @@ public class App {
         }
 
         final var toolCalls = optToolCalls.get();
+        messages.add(new Message(Role.ASSISTANT, messageStr, toolCalls));
         toolCalls.forEach(toolCall -> {
             final var function = toolCall.function();
             final var functionName = function.name();
