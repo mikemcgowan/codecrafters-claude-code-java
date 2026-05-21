@@ -60,7 +60,6 @@ public class App {
         final var message = choiceZero.message();
         final var messageStr = message.content()
                                       .orElse("");
-        System.err.println("Message content from API call is: " + messageStr);
 
         final var optToolCalls = message.toolCalls();
         if (optToolCalls.isEmpty()) {
