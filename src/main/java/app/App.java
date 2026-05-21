@@ -78,7 +78,7 @@ public class App {
                                                      .model(MODEL);
         tools.forEach(tool -> params.addTool(tool.definition()));
         messages.forEach(message -> {
-            System.err.println(message.role() + " message: " + message.content());
+            System.err.println(message.role() + ": " + message.content());
             switch (message.role()) {
                 case USER -> params.addUserMessage(message.content());
                 case TOOL -> params.addMessage(ChatCompletionToolMessageParam.builder()
