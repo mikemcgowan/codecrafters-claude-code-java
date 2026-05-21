@@ -78,27 +78,17 @@ public class App {
                                                      .model(MODEL);
         tools.forEach(tool -> params.addTool(tool.definition()));
         messages.forEach(message -> {
+            System.err.println(message.role() + " message: " + message.content());
             switch (message.role()) {
-                case USER -> {
-                    System.err.println("Adding USER message: " + message.content());
-                    params.addUserMessage(message.content());
-                }
-                case TOOL -> {
-                    System.err.println("Adding TOOL message: " + message.content());
-                    final var msg = ChatCompletionToolMessageParam.builder()
-                                                                  .toolCallId(message.toolCallId())
-                                                                  .content(message.content())
-                                                                  .build();
-                    params.addMessage(msg);
-                }
-                case ASSISTANT -> {
-                    System.err.println("Adding ASSISTANT message: " + message.content());
-                    final var msg = ChatCompletionAssistantMessageParam.builder()
-                                                                       .toolCalls(message.toolCalls())
-                                                                       .content(message.content())
-                                                                       .build();
-                    params.addMessage(msg);
-                }
+                case USER -> params.addUserMessage(message.content());
+                case TOOL -> params.addMessage(ChatCompletionToolMessageParam.builder()
+                                                                             .toolCallId(message.toolCallId())
+                                                                             .content(message.content())
+                                                                             .build());
+                case ASSISTANT -> params.addMessage(ChatCompletionAssistantMessageParam.builder()
+                                                                                       .toolCalls(message.toolCalls())
+                                                                                       .content(message.content())
+                                                                                       .build());
             }
         });
         return params.build();
