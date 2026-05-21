@@ -44,6 +44,7 @@ public class App {
     }
 
     private void callApi() {
+        System.err.println("\n\nNEW ITERATION:");
         final var response = client.chat()
                                    .completions()
                                    .create(prepareParams());
