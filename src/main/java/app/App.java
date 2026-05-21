@@ -21,6 +21,7 @@ import app.tools.WriteTool;
 public class App {
 
     private static final String MODEL = "anthropic/claude-haiku-4.5";
+    private static final int MAX_ITERATIONS = 100;
 
     private final OpenAIClient client;
     private final List<Message> messages;
@@ -32,14 +33,25 @@ public class App {
         this.tools = List.of(new ReadTool(), new WriteTool(), new BashTool());
     }
 
-    public boolean callApi() {
+    public void run() {
+        int iterations = 0;
+        while (iterations < MAX_ITERATIONS) {
+            callApi();
+            ++iterations;
+        }
+        System.err.println("Too many agent loop iterations");
+        System.exit(1);
+    }
+
+    private void callApi() {
         final var response = client.chat()
                                    .completions()
                                    .create(prepareParams());
 
         if (response.choices()
                     .isEmpty()) {
-            throw new RuntimeException("no choices in response");
+            System.err.println("No choices in response");
+            System.exit(1);
         }
 
         final var choiceZero = response.choices()
@@ -47,17 +59,17 @@ public class App {
         final var message = choiceZero.message();
         final var messageStr = message.content()
                                       .orElse("");
+        System.err.println("Message content from API call is: " + messageStr);
 
         final var optToolCalls = message.toolCalls();
         if (optToolCalls.isEmpty()) {
             System.out.print(messageStr);
-            return false;
+            System.exit(0);
         }
 
         final var toolCalls = optToolCalls.get();
         messages.add(new Message(Role.ASSISTANT, messageStr, toolCalls));
         processToolCalls(toolCalls);
-        return true;
     }
 
     private ChatCompletionCreateParams prepareParams() {
@@ -66,8 +78,12 @@ public class App {
         tools.forEach(tool -> params.addTool(tool.definition()));
         messages.forEach(message -> {
             switch (message.role()) {
-                case USER -> params.addUserMessage(message.content());
+                case USER -> {
+                    System.err.println("Adding USER message: " + message.content());
+                    params.addUserMessage(message.content());
+                }
                 case TOOL -> {
+                    System.err.println("Adding TOOL message: " + message.content());
                     final var msg = ChatCompletionToolMessageParam.builder()
                                                                   .toolCallId(message.toolCallId())
                                                                   .content(message.content())
@@ -75,6 +91,7 @@ public class App {
                     params.addMessage(msg);
                 }
                 case ASSISTANT -> {
+                    System.err.println("Adding ASSISTANT message: " + message.content());
                     final var msg = ChatCompletionAssistantMessageParam.builder()
                                                                        .toolCalls(message.toolCalls())
                                                                        .content(message.content())
