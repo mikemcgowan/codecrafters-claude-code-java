@@ -36,15 +36,15 @@ public class App {
     public void run() {
         int iterations = 0;
         while (iterations < MAX_ITERATIONS) {
-            callApi();
             ++iterations;
+            callApi(iterations);
         }
         System.err.println("Too many agent loop iterations");
         System.exit(1);
     }
 
-    private void callApi() {
-        System.err.println("\n\nNEW ITERATION:");
+    private void callApi(int iteration) {
+        System.err.println("\ncallApi(" + iteration + "):");
         final var response = client.chat()
                                    .completions()
                                    .create(prepareParams());
